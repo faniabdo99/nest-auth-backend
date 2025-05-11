@@ -4,7 +4,6 @@ import { UserService } from '../services/user.service';
 
 @Controller('user')
 export class UserController {
-
   constructor(private readonly userService: UserService) {}
 
   @Get('/')
@@ -13,7 +12,7 @@ export class UserController {
   }
 
   @Post('signup')
-  singup(@Body() user_data: CreateUserDto){
+  singup(@Body() user_data: CreateUserDto) {
     return this.userService.create(user_data);
   }
 }

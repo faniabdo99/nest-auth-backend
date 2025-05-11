@@ -6,19 +6,18 @@ import { CreateUserDto } from '../dto/create_user.dto';
 
 @Injectable()
 export class UserService {
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-    constructor(
-        @InjectModel(User.name) private userModel: Model<User>,
-    ) {}
-
-    async create(createUserDto: CreateUserDto): Promise<User> {
-        // Check if user already exists
-        const existingUser = await this.userModel.findOne({ email: createUserDto.email });
-        if (existingUser) {
-            throw new BadRequestException('User with this email already exists');
-        }
-
-        const createdUser = new this.userModel(createUserDto);
-        return createdUser.save();
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    // Check if user already exists
+    const existingUser = await this.userModel.findOne({
+      email: createUserDto.email,
+    });
+    if (existingUser) {
+      throw new BadRequestException('User with this email already exists');
     }
+
+    const createdUser = new this.userModel(createUserDto);
+    return createdUser.save();
+  }
 }
