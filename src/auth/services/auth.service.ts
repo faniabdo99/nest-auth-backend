@@ -8,6 +8,6 @@ export class AuthService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async login(email: string, password: string): Promise<string> {
-
+    return 'Login successful';
   }
 }
