@@ -5,7 +5,9 @@ import { CreateUserDto } from '../dtos/create_user.dto';
 import { RefreshTokenDto } from '../dtos/refresh_token.dto';
 import { User } from '../schemas/user.schema';
 import { AuthTokens } from 'src/interfaces/auth_token.interface';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -16,6 +18,10 @@ export class AuthController {
    * @returns The newly created user object
    * @throws BadRequestException if a user with the provided email already exists
    */
+  @ApiOperation({ summary: 'Create new user account', description: 'Register a new user with name, email and password' })
+  @ApiResponse({ status: 201, description: 'User successfully created' })
+  @ApiResponse({ status: 400, description: 'Bad Request - Email already exists or invalid input' })
+  @ApiBody({ type: CreateUserDto })
   @Post('signup')
   signup(@Body() user_data: CreateUserDto): Promise<User> {
     return this.authService.createUser(user_data);
@@ -27,6 +33,10 @@ export class AuthController {
    * @returns An object containing access_token and refresh_token
    * @throws UnauthorizedException if credentials are invalid
    */
+  @ApiOperation({ summary: 'User login', description: 'Authenticate user and generate access token' })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid credentials' })
+  @ApiBody({ type: LoginDto })
   @Post('login')
   login(@Body() credentials: LoginDto): Promise<AuthTokens> {
     return this.authService.login(credentials);
@@ -38,6 +48,10 @@ export class AuthController {
    * @returns An object containing new access_token and refresh_token
    * @throws UnauthorizedException if refresh token is invalid or expired
    */
+  @ApiOperation({ summary: 'Refresh access token', description: 'Generate new access token using refresh token' })
+  @ApiResponse({ status: 200, description: 'Token successfully refreshed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or expired refresh token' })
+  @ApiBody({ type: RefreshTokenDto })
   @Post('refresh-token')
   refreshToken(
     @Body() refresh_token_data: RefreshTokenDto,
