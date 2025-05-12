@@ -21,11 +21,12 @@ import { APP_GUARD } from '@nestjs/core';
     ConfigModule.forRoot({
       isGlobal: true,
       expandVariables: true,
+      envFilePath: '.env',
     }),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION_TIME },
     }),
     MongooseModule.forRoot(process.env.MONGO_URI ?? ''),
     AuthModule,

@@ -4,6 +4,7 @@ import { LoginDto } from '../dtos/login.dto';
 import { CreateUserDto } from '../dtos/create_user.dto';
 import { RefreshTokenDto } from '../dtos/refresh_token.dto';
 import { User } from '../schemas/user.schema';
+import { AuthTokens } from 'src/interfaces/auth_token.interface';
 
 @Controller('auth')
 export class AuthController {

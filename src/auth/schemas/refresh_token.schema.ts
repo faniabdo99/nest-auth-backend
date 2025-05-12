@@ -12,6 +12,9 @@ export class RefreshToken {
   user_id: string;
 
   @Prop({ required: true })
+  email: string;
+
+  @Prop({ required: true })
   expiry_date: Date;
 }
 

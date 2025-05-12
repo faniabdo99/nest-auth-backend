@@ -13,6 +13,9 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshToken } from '../schemas/refresh_token.schema';
 import { v4 as uuidv4 } from 'uuid';
+import { AuthTokens } from 'src/interfaces/auth_token.interface';
+import { UserDataForAccessToken } from 'src/interfaces/user_data_for_access_token.interface';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +26,7 @@ export class AuthService {
     @InjectModel(RefreshToken.name)
     private refreshTokenModel: Model<RefreshToken>,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {
     this.logger = new Logger(AuthService.name);
   }
@@ -41,7 +45,7 @@ export class AuthService {
     this.logger.log(`Creating user ${name} with email ${email}`);
     // Check if user already exists
     const existingUser = await this.userModel.findOne({
-      email: email,
+      email: email.toLowerCase(),
     });
     if (existingUser) {
       this.logger.error(`User with email ${email} already exists`);
@@ -49,11 +53,11 @@ export class AuthService {
     }
 
     // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, Number(this.configService.get('BCRYPT_SALT_ROUNDS')) ?? 12);
 
     const createdUser = new this.userModel({
       name,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
     });
     this.logger.log(`User ${name} created successfully`);
@@ -69,7 +73,7 @@ export class AuthService {
    * @throws UnauthorizedException if the email is not found or password is invalid
    */
   async login(credentials: LoginDto): Promise<AuthTokens> {
-    const user = await this.userModel.findOne({ email: credentials.email });
+    const user = await this.userModel.findOne({ email: credentials.email.toLowerCase() });
     if (!user) {
       this.logger.error(`User with email ${credentials.email} not found`);
       throw new UnauthorizedException('Invalid credentials');
@@ -83,7 +87,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     this.logger.log(`User ${credentials.email} logged in successfully`);
-    return await this.generateAccessToken(user._id.toString());
+    return await this.generateAccessToken({ sub: user._id.toString(), email: user.email });
   }
 
   /**
@@ -104,7 +108,7 @@ export class AuthService {
       );
     }
     this.logger.log(`Refresh token ${refresh_token} refreshed successfully`);
-    return this.generateAccessToken(refresh_token_document.user_id);
+    return this.generateAccessToken({ sub: refresh_token_document.user_id, email: refresh_token_document.email });
   }
 
   /**
@@ -113,17 +117,20 @@ export class AuthService {
    * @returns A Promise that resolves to an AuthTokens containing the access token and refresh token
    * @throws Logger if the access token generation fails
    */
-  async generateAccessToken(user_id: string): Promise<AuthTokens> {
-    const payload = { user_id };
+  async generateAccessToken(user_data: UserDataForAccessToken): Promise<AuthTokens> {
+    // Delete all refresh tokens for the user    
+    await this.refreshTokenModel.deleteMany({ user_id: user_data.sub });
+    // Generate a new refresh token
     const refresh_token = await this.refreshTokenModel.create({
       token: uuidv4(),
-      user_id: user_id,
-      expiry_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      user_id: user_data.sub,
+      email: user_data.email,
+      expiry_date: new Date(Date.now() + (this.configService.get('REFRESH_TOKEN_EXPIRATION_TIME') ?? 7 * 24 * 60 * 60 * 1000)),
     });
-    this.logger.log(`Access token generated for user ${user_id}`);
+    this.logger.log(`Access token generated for user ${user_data.sub}`);
     return {
-      access_token: await this.jwtService.signAsync(payload, {
-        expiresIn: '1h',
+      access_token: await this.jwtService.signAsync(user_data, {
+        expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRATION_TIME') ?? '1h',
       }),
       refresh_token: refresh_token.token,
     };
