@@ -55,7 +55,9 @@ export class AuthService {
     // Hash the password before saving
     const hashedPassword = await bcrypt.hash(
       password,
-      Number(this.configService.get('BCRYPT_SALT_ROUNDS')) ?? 12,
+      this.configService.get('BCRYPT_SALT_ROUNDS')
+        ? Number(this.configService.get('BCRYPT_SALT_ROUNDS'))
+        : 12,
     );
 
     const createdUser = new this.userModel({

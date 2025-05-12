@@ -8,6 +8,8 @@ import {
 import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { JwtPayload } from '../interfaces/jwt_payload.interface';
+
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
@@ -21,12 +23,12 @@ export class AuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request: Request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const token: string | undefined = this.extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException('You are not authenticated');
     }
     try {
-      const payload = this.jwtService.verify(token);
+      const payload: JwtPayload = this.jwtService.verify(token);
       request['user'] = payload;
     } catch (error) {
       Logger.error(error);
