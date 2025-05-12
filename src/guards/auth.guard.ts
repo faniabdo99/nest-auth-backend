@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
@@ -11,7 +17,9 @@ export class AuthGuard implements CanActivate {
    * @param context - The execution context
    * @returns A boolean indicating if the request is authenticated
    */
-   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
     const request: Request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
@@ -21,8 +29,8 @@ export class AuthGuard implements CanActivate {
       const payload = this.jwtService.verify(token);
       request['user'] = payload;
     } catch (error) {
-        Logger.error(error);
-        throw new UnauthorizedException('You are not authenticated');
+      Logger.error(error);
+      throw new UnauthorizedException('You are not authenticated');
     }
     return true;
   }

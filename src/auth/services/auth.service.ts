@@ -53,7 +53,10 @@ export class AuthService {
     }
 
     // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(password, Number(this.configService.get('BCRYPT_SALT_ROUNDS')) ?? 12);
+    const hashedPassword = await bcrypt.hash(
+      password,
+      Number(this.configService.get('BCRYPT_SALT_ROUNDS')) ?? 12,
+    );
 
     const createdUser = new this.userModel({
       name,
@@ -73,7 +76,9 @@ export class AuthService {
    * @throws UnauthorizedException if the email is not found or password is invalid
    */
   async login(credentials: LoginDto): Promise<AuthTokens> {
-    const user = await this.userModel.findOne({ email: credentials.email.toLowerCase() });
+    const user = await this.userModel.findOne({
+      email: credentials.email.toLowerCase(),
+    });
     if (!user) {
       this.logger.error(`User with email ${credentials.email} not found`);
       throw new UnauthorizedException('Invalid credentials');
@@ -87,7 +92,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     this.logger.log(`User ${credentials.email} logged in successfully`);
-    return await this.generateAccessToken({ sub: user._id.toString(), email: user.email });
+    return await this.generateAccessToken({
+      sub: user._id.toString(),
+      email: user.email,
+    });
   }
 
   /**
@@ -108,7 +116,10 @@ export class AuthService {
       );
     }
     this.logger.log(`Refresh token ${refresh_token} refreshed successfully`);
-    return this.generateAccessToken({ sub: refresh_token_document.user_id, email: refresh_token_document.email });
+    return this.generateAccessToken({
+      sub: refresh_token_document.user_id,
+      email: refresh_token_document.email,
+    });
   }
 
   /**
@@ -117,20 +128,27 @@ export class AuthService {
    * @returns A Promise that resolves to an AuthTokens containing the access token and refresh token
    * @throws Logger if the access token generation fails
    */
-  async generateAccessToken(user_data: UserDataForAccessToken): Promise<AuthTokens> {
-    // Delete all refresh tokens for the user    
+  async generateAccessToken(
+    user_data: UserDataForAccessToken,
+  ): Promise<AuthTokens> {
+    // Delete all refresh tokens for the user
     await this.refreshTokenModel.deleteMany({ user_id: user_data.sub });
     // Generate a new refresh token
     const refresh_token = await this.refreshTokenModel.create({
       token: uuidv4(),
       user_id: user_data.sub,
       email: user_data.email,
-      expiry_date: new Date(Date.now() + (this.configService.get('REFRESH_TOKEN_EXPIRATION_TIME') ?? 7 * 24 * 60 * 60 * 1000)),
+      expiry_date: new Date(
+        Date.now() +
+          (this.configService.get('REFRESH_TOKEN_EXPIRATION_TIME') ??
+            7 * 24 * 60 * 60 * 1000),
+      ),
     });
     this.logger.log(`Access token generated for user ${user_data.sub}`);
     return {
       access_token: await this.jwtService.signAsync(user_data, {
-        expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRATION_TIME') ?? '1h',
+        expiresIn:
+          this.configService.get('ACCESS_TOKEN_EXPIRATION_TIME') ?? '1h',
       }),
       refresh_token: refresh_token.token,
     };

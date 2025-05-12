@@ -39,7 +39,9 @@ export class AuthController {
    * @throws UnauthorizedException if refresh token is invalid or expired
    */
   @Post('refresh-token')
-  refreshToken(@Body() refresh_token_data: RefreshTokenDto): Promise<AuthTokens> {
+  refreshToken(
+    @Body() refresh_token_data: RefreshTokenDto,
+  ): Promise<AuthTokens> {
     const { refresh_token } = refresh_token_data;
     return this.authService.refreshToken(refresh_token);
   }
