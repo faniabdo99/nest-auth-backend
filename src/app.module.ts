@@ -4,18 +4,21 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   // TODO: Extract this to a config file
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      expandVariables: true,
+    }),
     JwtModule.register({
       global: true,
-      secret: 'TOP_SECRET',
+      secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1h' },
     }),
-    MongooseModule.forRoot(
-      'mongodb+srv://faniabdo999:sLqIbvUeIYOnxhEy@nestjs-auth.penoidn.mongodb.net/?retryWrites=true&w=majority&appName=nestjs-auth',
-    ),
+    MongooseModule.forRoot(process.env.MONGO_URI ?? ''),
     AuthModule,
   ],
   controllers: [AppController],
