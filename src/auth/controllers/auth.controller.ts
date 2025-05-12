@@ -3,6 +3,7 @@ import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dtos/login.dto';
 import { CreateUserDto } from '../dtos/create_user.dto';
 import { RefreshTokenDto } from '../dtos/refresh_token.dto';
+import { User } from '../schemas/user.schema';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +16,7 @@ export class AuthController {
    * @throws BadRequestException if a user with the provided email already exists
    */
   @Post('signup')
-  singup(@Body() user_data: CreateUserDto) {
+  signup(@Body() user_data: CreateUserDto): Promise<User> {
     return this.authService.createUser(user_data);
   }
 
@@ -26,7 +27,7 @@ export class AuthController {
    * @throws UnauthorizedException if credentials are invalid
    */
   @Post('login')
-  login(@Body() credentials: LoginDto): Promise<object> {
+  login(@Body() credentials: LoginDto): Promise<AuthTokens> {
     return this.authService.login(credentials);
   }
 
@@ -37,7 +38,7 @@ export class AuthController {
    * @throws UnauthorizedException if refresh token is invalid or expired
    */
   @Post('refresh-token')
-  refreshToken(@Body() refresh_token_data: RefreshTokenDto): Promise<object> {
+  refreshToken(@Body() refresh_token_data: RefreshTokenDto): Promise<AuthTokens> {
     const { refresh_token } = refresh_token_data;
     return this.authService.refreshToken(refresh_token);
   }

@@ -68,7 +68,7 @@ export class AuthService {
    * @returns A Promise that resolves to an object containing access and refresh tokens
    * @throws UnauthorizedException if the email is not found or password is invalid
    */
-  async login(credentials: LoginDto): Promise<object> {
+  async login(credentials: LoginDto): Promise<AuthTokens> {
     const user = await this.userModel.findOne({ email: credentials.email });
     if (!user) {
       this.logger.error(`User with email ${credentials.email} not found`);
@@ -89,10 +89,10 @@ export class AuthService {
   /**
    * Refreshes an access token using a refresh token
    * @param refresh_token - The refresh token to be used for token refresh
-   * @returns A Promise that resolves to an object containing the new access token and refresh token
+   * @returns A Promise that resolves to an AuthTokens containing the new access token and refresh token
    * @throws UnauthorizedException if the refresh token is invalid or expired
    */
-  async refreshToken(refresh_token: string): Promise<object> {
+  async refreshToken(refresh_token: string): Promise<AuthTokens> {
     const refresh_token_document = await this.refreshTokenModel.findOne({
       token: refresh_token,
       expiry_date: { $gt: new Date() },
@@ -110,10 +110,10 @@ export class AuthService {
   /**
    * Generates an access token for a user
    * @param user_id - The ID of the user for whom the access token is being generated
-   * @returns A Promise that resolves to an object containing the access token and refresh token
+   * @returns A Promise that resolves to an AuthTokens containing the access token and refresh token
    * @throws Logger if the access token generation fails
    */
-  async generateAccessToken(user_id: string): Promise<object> {
+  async generateAccessToken(user_id: string): Promise<AuthTokens> {
     const payload = { user_id };
     const refresh_token = await this.refreshTokenModel.create({
       token: uuidv4(),
