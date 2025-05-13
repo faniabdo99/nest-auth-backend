@@ -28,7 +28,7 @@ export class AuthController {
     description: 'Bad Request - Email already exists or invalid input',
   })
   @ApiBody({ type: CreateUserDto })
-  @Post('signup')
+  @Post('register')
   signup(@Body() user_data: CreateUserDto): Promise<User> {
     return this.authService.createUser(user_data);
   }

@@ -153,6 +153,10 @@ export class AuthService {
           this.configService.get('ACCESS_TOKEN_EXPIRATION_TIME') ?? '1h',
       }),
       refresh_token: refresh_token.token,
+      user: {
+        id: user_data.sub,
+        email: user_data.email,
+      },
     };
   }
 }
